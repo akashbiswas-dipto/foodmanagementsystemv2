@@ -1,0 +1,19 @@
+@import url('font.css');
+
+ul li a{
+    color: white !important;
+    font-family: "Roboto Condensed", sans-serif;
+    font-size: 18px;
+    padding: 5px 20px !important;
+}
+
+ul li a:hover{
+    background-color: white !important;
+    color: #3BB143 !important;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 1%29' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}

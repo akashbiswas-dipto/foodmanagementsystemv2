@@ -1,0 +1,47 @@
+.hero {
+    background: linear-gradient(rgba(59,177,67,0.5), rgba(59,177,67,0.5)), url('<?php echo $base_url;?>public/content/hero-bg.jpg') no-repeat center center !important;
+    background-size: cover  !important;
+    height: 80vh  !important;
+    display: flex  !important;
+    justify-content: center  !important;
+    align-items: center  !important;
+    color: white  !important;
+    text-align: center  !important;
+}
+
+.hero h1 {
+    font-size: 3em;
+    font-weight: bold;
+}
+
+.hero p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+/* Features section */
+.features {
+    padding: 60px 0;
+}
+
+.feature-card {
+    transition: transform 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+}
+
+.feature-card i {
+    font-size: 2em;
+    margin-bottom: 15px;
+    color: #3BB143;
+}
+
+/* Footer */
+footer {
+    background-color: #3BB143;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}

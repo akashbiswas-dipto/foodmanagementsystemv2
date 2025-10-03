@@ -1,0 +1,81 @@
+/* Container box */
+.box {
+    width: 50%;
+    max-width: 450px;       /* Prevent overly wide box */
+    min-width: 280px;       /* Ensure usability on small screens */
+    margin: 100px auto 0 auto;
+    text-align: center;
+    padding: 30px;
+    font-family: "Roboto Condensed", sans-serif;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Heading */
+.box h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Inputs, buttons, and select fields */
+.box input, .box button, .box select {
+    width: 100%;       /* Full width of container */
+    max-width: 300px;  /* Preserve your intended width */
+    height: 40px;
+    margin: 10px 0;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* Button hover effect */
+.box button:hover {
+    background-color: #3BB143;
+    color: white;
+    border: none;
+    transition: 0.3s;
+}
+
+/* Links */
+.box a {
+    text-decoration: none !important;
+    color: black !important;
+    font-weight: bold;
+}
+
+.box a:hover {
+    color: #3BB143 !important;
+    transition: 0.1s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .box {
+        width: 80%;
+        margin-top: 50px;
+        padding: 20px;
+    }
+
+    .box h1 {
+        font-size: 1.8em;
+    }
+}
+
+@media (max-width: 480px) {
+    .box {
+        width: 90%;
+        margin-top: 30px;
+        padding: 15px;
+    }
+
+    .box h1 {
+        font-size: 1.5em;
+    }
+
+    .box input, .box button, .box select {
+        max-width: 100%;
+    }
+}

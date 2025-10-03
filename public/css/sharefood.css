@@ -1,0 +1,43 @@
+.box{
+    width: 50% !important;
+    margin: auto;
+    text-align: center;
+    margin-top: 100px;
+    height: fit-content;
+    font-family: "Roboto Condensed", sans-serif;
+}
+
+.box h1{
+    font-size: 2.5em;
+    margin: 0 25%;
+    margin-bottom: 20px;
+    color: #333;
+    
+}
+
+.box input,button, select{
+    width: 300px;
+    height: 40px;
+    margin: 10px 0;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.box button:hover{
+    background-color: #3BB143;
+    color: white;
+    border: none;
+    transition: 0.3s;
+}
+
+.box a{
+    text-decoration: none !important;
+    color: black !important;
+    font-weight: bold;
+}
+
+.box a:hover{
+    color: #3BB143 !important;
+    transition: 0.1s;
+}
