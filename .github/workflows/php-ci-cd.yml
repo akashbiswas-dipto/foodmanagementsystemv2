@@ -1,0 +1,66 @@
+name: PHP CI/CD for FoodManagementSystem
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Set up PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, mbstring, curl
+
+      # 3️⃣ Install Composer dependencies (if any)
+      - name: Install dependencies
+        run: |
+          if [ -f composer.json ]; then
+            composer install --no-progress --no-suggest --prefer-dist
+          fi
+
+      # 4️⃣ Run tests if you have PHPUnit
+      - name: Run tests
+        run: |
+          if [ -f phpunit.xml ]; then
+            vendor/bin/phpunit --configuration phpunit.xml
+          else
+            echo "No tests found. Skipping."
+          fi
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 1️⃣ Install rsync for deployment
+      - name: Install rsync
+        run: sudo apt-get install -y rsync
+
+      # 2️⃣ Deploy to EC2 via SSH
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          source: "."
+          target: "/var/www/html/foodmanagementsystem"
+          rsync_opts: "-avz --delete"

@@ -6,10 +6,7 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
     $base_url = "https://mop-zilla.com/"; 
     define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/");
 }
-require_once __DIR__ . '/../vendor/autoload.php'; // adjust path relative to file
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
