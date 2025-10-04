@@ -1,172 +1,127 @@
 <?php
-session_start();
-if ($_SERVER['HTTP_HOST'] == 'localhost') {
-    $base_url = "http://localhost/foodmanagementsystem/"; 
-    define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/foodmanagementsystem/");
-} else {
-    $base_url = "https://foodmanagementsystem/"; 
-    define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/");
-}
-include_once(BASE_PATH.'config.php');  
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-require_once(BASE_PATH . 'vendor/autoload.php');
+declare(strict_types=1);
+
 use MongoDB\BSON\ObjectId;
 
-if (isset($_POST['share_food'])) {
-    // Get form values
-    $foodItem = $_POST['food_item'] ?? '';
-    $foodCategory = $_POST['food_category'] ?? '';
-    $quantity = $_POST['quantity'] ?? '';
-    $pickupTime = $_POST['pickup_time'] ?? '';
-    $location = $_POST['location'] ?? '';
-    $userId = $_SESSION['user_id'];
-    $userName = $_SESSION['user_name'];
-    $status = $_POST['status'] ?? '';
+class FoodController {
+    private $db;
+    private $base_url;
+    private $userId;
+    private $userName;
+    private $role;
+    private $redirectHandler;
 
-    // Simple validation
-    if ($foodItem && $foodCategory && $quantity && $pickupTime && $location) {
-        try {
-            $foodCollection->insertOne([
-                'user_id' => $userId,
-                'user_name' => $userName,
-                'food_item' => $foodItem,
-                'food_category' => $foodCategory,
-                'quantity' => (int)$quantity,
-                'pickup_time' => $pickupTime,
-                'location' => $location,
-                'status' => (int)$status,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-
-            // Redirect after success
-            header("Location: ".$base_url."public/donor/dashboard.php?success=Food Details Shared Successfully");
+    /**
+     * @param callable|null $redirectHandler Optional redirect function for testing
+     */
+    public function __construct($db, string $base_url, ?string $userId = null, ?string $userName = null, ?int $role = null, ?callable $redirectHandler = null) {
+        $this->db = $db;
+        $this->base_url = rtrim($base_url, '/') . '/';
+        $this->userId = $userId ?? ($_SESSION['user_id'] ?? null);
+        $this->userName = $userName ?? ($_SESSION['user_name'] ?? null);
+        $this->role = $role ?? ($_SESSION['role'] ?? null);
+        $this->redirectHandler = $redirectHandler ?? function(string $url) {
+            header("Location: " . $url);
             exit();
-        } catch (Exception $e) {
-            die("Error inserting food data: " . $e->getMessage());
-        }
-    } else {
-        die("Please fill in all required fields!");
+        };
     }
-}
 
-if (isset($_GET['Delete'])) {
-    $foodId = $_GET['Delete'];
+    // --------------------- FOOD ---------------------
+    public function shareFood(array $data): void {
+        $this->ensureLoggedIn();
+        $required = ['food_item', 'food_category', 'quantity', 'pickup_time', 'location'];
+        foreach ($required as $field) {
+            $value = (string)($data[$field] ?? '');
+            if (empty(trim($value))) {
+                throw new InvalidArgumentException("Field '$field' is required");
+            }
+        }
 
-    try {
-        $result = $foodCollection->deleteOne([
-            '_id' => new ObjectId($foodId),
-            'user_id' => $_SESSION['user_id'] // Ensure only owner can delete
+        $this->db->food->insertOne([
+            'donor_id' => $this->userId,
+            'user_name' => $this->userName,
+            'food_item' => trim($data['food_item']),
+            'food_category' => $data['food_category'],
+            'quantity' => (int)$data['quantity'],
+            'pickup_time' => $data['pickup_time'],
+            'location' => $data['location'],
+            'status' => (int)($data['status'] ?? 1),
+            'created_at' => date('Y-m-d H:i:s')
         ]);
 
-        if ($result->getDeletedCount() > 0) {
-            header("Location: ".$base_url."public/donor/dashboard.php?success=Food item deleted successfully");
-            exit();
-        } else {
-            die("Food item not found or you don't have permission to delete it.");
-        }
-    } catch (Exception $e) {
-        die("Error deleting food item: " . $e->getMessage());
-    }
-}
-if (isset($_POST['update_food'])) {
-    $foodId = $_POST['food_id'] ?? '';
-    $userId = $_SESSION['user_id'];
-
-    if (!$foodId) {
-        die("Food ID missing!");
+        $this->redirect("public/donor/dashboard.php?success=Food shared successfully");
     }
 
-    try {
-        $updateResult = $foodCollection->updateOne(
-            [
-                '_id' => new ObjectId($foodId),
-                'user_id' => $userId // only update own food
-            ],
+    public function updateFood(array $data): void {
+        $this->ensureLoggedIn();
+        if (empty($data['food_id'])) throw new InvalidArgumentException("Food ID missing");
+
+        $updateResult = $this->db->food->updateOne(
+            ['_id' => new ObjectId($data['food_id']), 'donor_id' => $this->userId],
             ['$set' => [
-                'food_item' => $_POST['food_item'],
-                'food_category' => $_POST['food_category'],
-                'quantity' => (int)$_POST['quantity'],
-                'pickup_time' => $_POST['pickup_time'],
-                'location' => $_POST['location']
+                'food_item' => trim($data['food_item']),
+                'food_category' => $data['food_category'],
+                'quantity' => (int)$data['quantity'],
+                'pickup_time' => $data['pickup_time'],
+                'location' => $data['location']
             ]]
         );
 
-        if ($updateResult->getModifiedCount() > 0) {
-            header("Location: ".$base_url."public/donor/dashboard.php?success=Food updated successfully");
-        } else {
-            header("Location: ".$base_url."public/donor/dashboard.php?error=No changes made or item not found");
+        $msg = ($updateResult->getModifiedCount() > 0) ? "Food updated successfully" : "No changes made";
+        $this->redirect("public/donor/dashboard.php?" . ($updateResult->getModifiedCount() > 0 ? "success=$msg" : "error=$msg"));
+    }
+
+    public function deleteFood(string $foodId): void {
+        $this->ensureLoggedIn();
+
+        $result = $this->db->food->deleteOne([
+            '_id' => new ObjectId($foodId),
+            'donor_id' => $this->userId
+        ]);
+
+        $msg = ($result->getDeletedCount() > 0) ? "Food deleted successfully" : "Permission denied or not found";
+        $this->redirect("public/donor/dashboard.php?" . ($result->getDeletedCount() > 0 ? "success=$msg" : "error=$msg"));
+    }
+
+    public function requestFood(string $foodId): void {
+        $this->ensureLoggedIn();
+
+        $existing = $this->db->food_requests->findOne([
+            'food_id' => new ObjectId($foodId),
+            'requested_by_id' => $this->userId
+        ]);
+
+        if ($existing) {
+            $this->redirect("public/ngo/dashboard.php?error=Already requested");
         }
-        exit();
 
-    } catch (Exception $e) {
-        die("Error updating food: ".$e->getMessage());
-    }
-}
+        $this->db->food_requests->insertOne([
+            'food_id' => new ObjectId($foodId),
+            'requested_by_id' => $this->userId,
+            'status' => 2,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_food'])) {
-    $userId = $_SESSION['user_id'];
-    $userName = $_SESSION['user_name'];
-    $foodId = $_POST['food_id'] ?? '';
-
-    if ($foodId) {
-        try {
-            $foodRequestsCollection->insertOne([
-                'food_id' => new ObjectId($foodId),
-                'food_name' => $foodName,
-                'requested_by_id' => $userId,
-                'requested_by_name' => $userName,
-                'status' => 2,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-
-            // Redirect back to dashboard or wherever
-            header("Location: ".$base_url."public/ngo/dashboard.php?success=Request sent successfully");
-            exit();
-        } catch (Exception $e) {
-            die("Error creating request: " . $e->getMessage());
-        }
-    } else {
-        die("Invalid food item selected!");
-    }
-} 
-
-if(isset($_POST['approve_request'])){
-    $requestId = new ObjectId($_POST['request_id']);
-
-    // First, fetch the request to get the food_id
-    $request = $foodRequestsCollection->findOne(['_id' => $requestId]);
-
-    if($request){
-        $foodId = $request['food_id'];
-
-        // Update request status
-        $foodRequestsCollection->updateOne(
-            ['_id' => $requestId],
-            ['$set' => ['status' => 3]]
-        );
-
-        // Update corresponding food item status to 2
-        $foodCollection->updateOne(
-            ['_id' => $foodId],
-            ['$set' => ['status' => 2]]
-        );
+        $this->redirect("public/ngo/dashboard.php?success=Food requested successfully");
     }
 
-    header("Location: ".$base_url."public/donor/ngorequest.php");
-    exit();
-}
+    public function approveRequest(string $requestId): void {
+        $this->ensureLoggedIn();
+        $this->db->food_requests->updateOne(['_id' => new ObjectId($requestId)], ['$set' => ['status' => 3]]);
+        $this->redirect("public/donor/dashboard.php?success=Request approved");
+    }
 
-// Decline request
-if(isset($_POST['decline_request'])){
-    $requestId = new ObjectId($_POST['request_id']);
+    public function declineRequest(string $requestId): void {
+        $this->ensureLoggedIn();
+        $this->db->food_requests->updateOne(['_id' => new ObjectId($requestId)], ['$set' => ['status' => 4]]);
+        $this->redirect("public/donor/dashboard.php?success=Request declined");
+    }
 
-    // Update request status
-    $foodRequestsCollection->updateOne(
-        ['_id' => $requestId],
-        ['$set' => ['status' => 4]]
-    );
-    header("Location: ".$base_url."public/donor/ngorequest.php");
-    exit();
+    private function ensureLoggedIn(): void {
+        if (!$this->userId) throw new RuntimeException("Unauthorized");
+    }
+
+    private function redirect(string $url): void {
+        call_user_func($this->redirectHandler, $this->base_url . $url);
+    }
 }
-?>

@@ -1,0 +1,128 @@
+{
+	"info": {
+		"_postman_id": "9e8cd119-4272-4c60-9403-2ff82274de26",
+		"name": "Food Management API",
+		"description": "API collection for FoodController endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49010703",
+		"_collection_link": "https://akashbiswas-dipto-9251907.postman.co/workspace/Akash-Biswas's-Workspace~716c9dab-2621-4ef1-823f-e50cca554823/collection/49010703-9e8cd119-4272-4c60-9403-2ff82274de26?action=share&source=collection_link&creator=49010703"
+	},
+	"item": [
+		{
+			"name": "Share Food",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"food_item\": \"Test Food\",\n    \"food_category\": \"Fruits\",\n    \"quantity\": 5,\n    \"pickup_time\": \"2025-10-10 12:00\",\n    \"location\": \"Test Location\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost/foodmanagementsystem/api/createFood.php",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"foodmanagementsystem",
+						"api",
+						"createFood.php"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Food",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"food_id\": \"68e0187159a1af5c240c3710\",\n    \"food_item\": \"Updated Food\",\n    \"food_category\": \"Vegetables\",\n    \"quantity\": 10,\n    \"pickup_time\": \"2025-10-15 14:00\",\n    \"location\": \"Updated Location\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost/foodmanagementsystem/api/updateFood.php",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"foodmanagementsystem",
+						"api",
+						"updateFood.php"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Food",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"food_id\": \"68e0187159a1af5c240c3710\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost/foodmanagementsystem/api/deleteFood.php",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"foodmanagementsystem",
+						"api",
+						"deleteFood.php"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Request Food",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"food_id\": \"68e0187159a1af5c240c3710\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost/foodmanagementsystem/api/requestFood.php",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"foodmanagementsystem",
+						"api",
+						"requestFood.php"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

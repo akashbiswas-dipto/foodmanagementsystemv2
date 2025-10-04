@@ -1,21 +1,30 @@
 <?php 
+// Dynamic Base URL & Path
 if ($_SERVER['HTTP_HOST'] == 'localhost') {
     $base_url = "http://localhost/foodmanagementsystem/"; 
-    define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/foodmanagementsystem/");
+    if (!defined("BASE_PATH")) define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/foodmanagementsystem/");
 } else {
     $base_url = "https://mop-zilla.com/"; 
-    define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/");
+    if (!defined("BASE_PATH")) define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/");
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/x-icon" href="<?php echo $base_url;?>public/content/FWMlogo.ico">
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="<?= $base_url ?>public/content/FWMlogo.ico">
+
+<!-- Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="<?php echo $base_url;?>public/css/navbar.css">
+
+<!-- Custom CSS -->
+<link rel="stylesheet" type="text/css" href="<?= $base_url ?>public/css/navbar.css">
+
 <title>Food Waste Management System</title>
 
 <style>
@@ -41,8 +50,8 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
 
 <nav class="navbar navbar-expand-lg" style="background-color: #3BB143 !important;">
   <div class="container">
-    <a class="navbar-brand" href="<?php echo $base_url;?>">
-      <img src="<?php echo $base_url;?>public/content/FWM.png" alt="Logo" width="50">
+    <a class="navbar-brand" href="<?= $base_url ?>">
+      <img src="<?= $base_url ?>public/content/FWM.png" alt="Logo" width="50">
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -53,16 +62,17 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link active" href="<?php echo $base_url;?>">Home</a>
+          <a class="nav-link active" href="<?= $base_url ?>">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="<?php echo $base_url;?>public/login.php">Login/Signup</a>
+          <a class="nav-link" href="<?= $base_url ?>public/login.php">Login/Signup</a>
         </li>
       </ul>
     </div>
   </div>
 </nav>
 
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
 

@@ -1,98 +1,139 @@
 <?php
-if ($_SERVER['HTTP_HOST'] == 'localhost') {
-    $base_url = "http://localhost/foodmanagementsystem/"; 
-    define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/foodmanagementsystem/");
-} else {
-    $base_url = "https://foodmanagementsystem/"; 
-    define("BASE_PATH", $_SERVER['DOCUMENT_ROOT']."/");
+// Start session
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
 }
-include_once(BASE_PATH.'config.php');  
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
-echo '<pre>';
-print_r($_POST);
-echo '</pre>';
+// Base URL & Path
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+if ($host === 'localhost') {
+    $base_url = "http://localhost/foodmanagementsystem/";
+    if (!defined("BASE_PATH")) define("BASE_PATH", __DIR__ . '/../../'); // adjust as needed
+} else {
+    $base_url = "https://mop-zilla.com/";
+    if (!defined("BASE_PATH")) define("BASE_PATH", __DIR__ . '/../../');
+}
+
+// Autoload Composer & Config
+require_once BASE_PATH . 'vendor/autoload.php';
+require_once BASE_PATH . 'config.php';
+require_once BASE_PATH . 'patterns/factory.php';
+
+use MongoDB\BSON\ObjectId;
+
+// Initialize MongoDB Atlas DB
+try {
+    $db = Database::getInstance()->getDB(); // Database singleton from config.php
+} catch (Exception $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
+// ----------------- SIGNUP -----------------
 if (isset($_POST['signup'])) {
-    echo 'i am here';
-    $name = $_POST['name'] ?? '';
-    $phone = $_POST['phone'] ?? '';
+    $name     = $_POST['name'] ?? '';
+    $phone    = $_POST['phone'] ?? '';
     $location = $_POST['location'] ?? '';
-    $email = $_POST['email'] ?? '';
+    $email    = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
-    $role = $_POST['role'] ?? '';
+    $role     = $_POST['role'] ?? '';
 
-    // Simple validation (you can expand)
     if ($name && $phone && $location && $email && $password && $role) {
-        // Hash password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-        // Insert user into MongoDB
         try {
-            $usersCollection->insertOne([
-                'name' => $name,
-                'phone' => $phone,
-                'location' => $location,
-                'email' => $email,
-                'password' => $hashedPassword,
-                'role' => (int)$role,
+            // Check if user already exists
+            $existing = $db->users->findOne(['email' => $email]);
+            if ($existing) {
+                echo "Email already registered!";
+                exit();
+            }
+
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+            $result = $db->users->insertOne([
+                'name'       => $name,
+                'phone'      => $phone,
+                'location'   => $location,
+                'email'      => $email,
+                'password'   => $hashedPassword,
+                'role'       => (int)$role,
                 'created_at' => date('Y-m-d H:i:s')
             ]);
-            $success = "User registered successfully!";
-            header("Location: ".$base_url."public/login.php?registration=success");
+
+            // Success
+            header("Location: " . $base_url . "public/login.php?registration=success");
             exit();
+
         } catch (Exception $e) {
-            $error = "Error registering user: " . $e->getMessage();
+            die("Error registering user: " . $e->getMessage());
         }
     } else {
-        $error = "Please fill all fields!";
+        echo "Please fill all fields!";
+        exit();
     }
 }
 
-if(isset($_POST['login'])) {
+// ----------------- LOGIN -----------------
+if (isset($_POST['login'])) {
     $email    = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
     if ($email && $password) {
         try {
-            $user = $usersCollection->findOne(['email' => $email]);
+            $user = $db->users->findOne(['email' => $email]);
+            echo var_dump($password, $user['password']);
             if ($user && password_verify($password, $user['password'])) {
-                
-                session_start();
-                $_SESSION['user_id'] = (string)$user['_id'];
-                $_SESSION['user_name'] = $user['name'];
-                $_SESSION['role'] = $user['role'];
-                if($user['role'] == 1 || $user['role'] === '1' || $user['role'] == 2 || $user['role'] === '2'){
-                    $_SESSION['role_name'] = 'Self Donor';
-                    header("Location: ".$base_url."public/donor/dashboard.php");
-                    exit();
-                } elseif($user['role'] == 3 || $user['role'] === '3'){
-                    $_SESSION['role_name'] = 'NGO';
-                    header("Location: ".$base_url."public/ngo/dashboard.php");
-                    exit();
-                } elseif($user['role'] == 4 || $user['role'] === '4'){
-                    $_SESSION['role_name'] = 'Admin';
-                    header("Location: ".$base_url."public/admin/dashboard.php");
+                    $_SESSION['user_id']   = (string)$user['_id'];
+                    $_SESSION['user_name'] = $user['name'];
+                    $_SESSION['role']      = (int)$user['role'];
+                    $role = isset($user['role']) ? (int)$user['role'] : 0;
+
+                    switch ($role) {
+                        case 1: 
+                            $_SESSION['role_name'] = 'Self Donor';
+                            header("Location: " . $base_url . "public/donor/dashboard.php");
+                            break;
+
+                        case 2:
+                            $_SESSION['role_name'] = 'Restaurant';
+                            header("Location: " . $base_url . "public/donor/dashboard.php");
+                            break;
+
+                        case 3:
+                            echo " ngo here";
+                            $_SESSION['role_name'] = 'NGO';
+                            header("Location: " . $base_url . "public/ngo/dashboard.php");
+                            break; 
+
+                        case 4:
+                            $_SESSION['role_name'] = 'Admin';
+                            header("Location: " . $base_url . "public/admin/dashboard.php");
+                            break;
+
+                        default:
+                            $_SESSION['role_name'] = 'Unknown';
+                            echo "Role not recognized!";
+                            exit();
+                    }
                     exit();
                 } else {
-                    $_SESSION['role_name'] = 'Unknown';
+                    echo "Invalid email or password!";
+                    exit();
                 }
-            } else {
-                echo "Invalid email or password!";
-            }
+
         } catch (Exception $e) {
-            echo "Error logging in: " . $e->getMessage();
+            die("Error logging in: " . $e->getMessage());
         }
     } else {
         echo "Please enter email and password!";
+        exit();
     }
 }
 
-if(isset($_GET['logout']) && $_GET['logout'] == 'logout') {
-    session_start();
+// ----------------- LOGOUT -----------------
+if (isset($_GET['logout']) && $_GET['logout'] === 'logout') {
     session_unset();
     session_destroy();
-    header("Location: ".$base_url."public/login.php");
+    header("Location: " . $base_url . "public/login.php");
     exit();
 }
 ?>
