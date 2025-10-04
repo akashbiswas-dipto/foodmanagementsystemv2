@@ -6,13 +6,12 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Correct path: go **one level up** from api folder
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../src/controller/taskController.php';
 
-// For testing: set a default logged-in user (Donor)
+
 if (!isset($_SESSION['user_id'])) {
-    $_SESSION['user_id'] = '68e0120059a1af5c240c370e'; // replace with actual donor ID
+    $_SESSION['user_id'] = '68e0120059a1af5c240c370e'; 
     $_SESSION['user_name'] = 'Akash Biswas';
     $_SESSION['role'] = 2; // donor role
 }

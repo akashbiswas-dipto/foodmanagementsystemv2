@@ -1,0 +1,53 @@
+name: PHP CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: --bind_ip_all
+
+    steps:
+      # Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Setup PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v3
+        with:
+          php-version: '8.2'
+          extensions: mbstring, mongodb, intl
+          coverage: none
+
+      # Install Composer dependencies
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist
+
+      # Run PHPUnit tests
+      - name: Run Tests
+        run: vendor/bin/phpunit --bootstrap vendor/autoload.php tests/
+
+      # Optional: Deployment (example with PM2)
+      - name: Deploy to Server
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd /var/www/foodmanagementsystem
+            git pull origin main
+            composer install --no-dev
+            pm2 restart all || pm2 start ecosystem.config.js
